@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Virtual env / packaging
+*.egg-info/
+build/
+dist/
+
+# Local database (personal data + runtime state — never commit)
+scheduler.db
+scheduler.db-shm
+scheduler.db-wal
+*.sqlite
+*.sqlite3
+
+# User uploads / attachments
+uploads/*
+!uploads/.gitkeep
+
+# Personal research data (real contact info — do not publish)
+professor_database_300_final.csv
+expand_research_fast.py
+expand_research_focus.py
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
