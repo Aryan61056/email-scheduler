@@ -6,7 +6,7 @@ and send them through **Apple Mail**, **Microsoft Outlook**, or **SMTP** — all
 from a clean local web interface. It also tracks replies and automatically
 detects bounces.
 
-Built for one-person outreach campaigns (e.g. emailing professors), not bulk
+Built for one-person outreach campaigns, not bulk
 marketing. Everything runs locally on your Mac; no data leaves your machine.
 
 ---
