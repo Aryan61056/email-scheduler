@@ -6,11 +6,16 @@ import io
 import json
 import os
 import random
+import re
 import smtplib
 import sqlite3
 import subprocess
+import sys
 import tempfile
 import threading
+import time as _time
+import urllib.error
+import urllib.request
 from contextlib import contextmanager
 from datetime import date, datetime, time, timedelta
 from email.mime.application import MIMEApplication
@@ -25,14 +30,122 @@ from flask import Flask, jsonify, render_template, request, send_file
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 500 * 1024 * 1024
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "scheduler.db")
-UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "uploads")
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(APP_DIR, "scheduler.db")
+UPLOADS_DIR = os.path.join(APP_DIR, "uploads")
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 scheduler = BackgroundScheduler(daemon=True)
 scheduler.start()
 
 selected_account_email: str = ""
+
+# ── Update checking ──────────────────────────────────────────────────────────────
+# The app self-updates from GitHub: it compares the local git commit against the
+# latest commit on the tracked branch and offers a one-click `git pull` + restart.
+GITHUB_REPO = "Aryan61056/email-scheduler"
+GITHUB_BRANCH = "main"
+_UPDATE_CACHE_TTL = 1800  # seconds — don't hit the GitHub API more than ~twice/hour
+_update_state = {"checked_at": 0.0, "data": None}
+_update_lock = threading.Lock()
+
+
+def _git(*args):
+    """Run a git command inside the app dir; return (returncode, stdout, stderr)."""
+    try:
+        r = subprocess.run(["git", "-C", APP_DIR, *args],
+                           capture_output=True, text=True, timeout=60)
+        return r.returncode, r.stdout.strip(), r.stderr.strip()
+    except Exception as exc:
+        return 1, "", str(exc)
+
+
+def _is_git_repo():
+    return os.path.isdir(os.path.join(APP_DIR, ".git"))
+
+
+def _local_commit():
+    code, out, _ = _git("rev-parse", "HEAD")
+    return out if code == 0 and out else None
+
+
+def _fetch_latest_commit():
+    """Latest commit on the tracked branch, via the public GitHub API."""
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/commits/{GITHUB_BRANCH}"
+    req = urllib.request.Request(url, headers={
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "EmailScheduler-update-check",
+    })
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        payload = json.loads(resp.read().decode())
+    commit = payload.get("commit", {}) or {}
+    return {
+        "sha": payload.get("sha", "") or "",
+        "message": (commit.get("message", "") or "").split("\n")[0][:140],
+        "date": (commit.get("author", {}) or {}).get("date", ""),
+        "url": payload.get("html_url") or f"https://github.com/{GITHUB_REPO}",
+    }
+
+
+def _compute_update(force=False):
+    """Build the version/update payload, caching the GitHub lookup for a while."""
+    with _update_lock:
+        now = _time.time()
+        cached = _update_state["data"]
+        if (not force and cached is not None
+                and now - _update_state["checked_at"] < _UPDATE_CACHE_TTL):
+            return cached
+        local = _local_commit()
+        data = {
+            "git": _is_git_repo(),
+            "current": local,
+            "current_short": local[:7] if local else None,
+            "latest": None, "latest_short": None,
+            "latest_message": None, "latest_date": None,
+            "latest_url": f"https://github.com/{GITHUB_REPO}",
+            "update_available": False,
+            "checked_at": datetime.now().isoformat(),
+            "error": None,
+        }
+        if not data["git"]:
+            data["error"] = "Not a git checkout — updates are managed manually."
+            _update_state.update(checked_at=now, data=data)
+            return data
+        try:
+            latest = _fetch_latest_commit()
+            data["latest"] = latest["sha"]
+            data["latest_short"] = latest["sha"][:7] if latest["sha"] else None
+            data["latest_message"] = latest["message"]
+            data["latest_date"] = latest["date"]
+            data["latest_url"] = latest["url"]
+            if local and latest["sha"]:
+                data["update_available"] = local != latest["sha"]
+        except urllib.error.HTTPError as exc:
+            data["error"] = f"GitHub returned HTTP {exc.code}"
+        except Exception as exc:
+            data["error"] = f"Could not reach GitHub: {exc}"
+        _update_state.update(checked_at=now, data=data)
+        return data
+
+
+def _restart_process(install_deps=False):
+    """Re-exec the server in place so freshly pulled code takes effect."""
+    def _do():
+        _time.sleep(0.6)
+        if install_deps:
+            try:
+                subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-r",
+                                os.path.join(APP_DIR, "requirements.txt")],
+                               capture_output=True, text=True, timeout=300)
+            except Exception:
+                pass
+        try:
+            scheduler.shutdown(wait=False)
+        except Exception:
+            pass
+        os.chdir(APP_DIR)
+        os.execv(sys.executable, [sys.executable, os.path.join(APP_DIR, "web_app.py")])
+    threading.Thread(target=_do, daemon=True).start()
 
 
 # ── Database ───────────────────────────────────────────────────────────────────
@@ -87,7 +200,6 @@ def init_db():
                 subject           TEXT DEFAULT '',
                 body              TEXT DEFAULT '',
                 attachments       TEXT DEFAULT '',
-                professor_link    TEXT DEFAULT '',
                 send_time         TEXT,
                 send_time_str     TEXT DEFAULT '',
                 status            TEXT DEFAULT 'pending',
@@ -133,14 +245,23 @@ def init_db():
             "ALTER TABLE batches ADD COLUMN professor_mode INTEGER DEFAULT 0",
             "ALTER TABLE batches ADD COLUMN account_email TEXT DEFAULT ''",
             "ALTER TABLE profiles ADD COLUMN professor_mode INTEGER DEFAULT 0",
-            "ALTER TABLE emails ADD COLUMN professor_link TEXT DEFAULT ''",
             "ALTER TABLE emails ADD COLUMN duplicate_warning INTEGER DEFAULT 0",
             "ALTER TABLE emails ADD COLUMN content_warning INTEGER DEFAULT 0",
+            "ALTER TABLE emails ADD COLUMN reply_body TEXT DEFAULT ''",
+            "ALTER TABLE emails ADD COLUMN reply_received_at TEXT",
+            "ALTER TABLE emails ADD COLUMN reply_delta_seconds INTEGER",
         ]:
             try:
                 conn.execute(stmt)
             except Exception:
                 pass
+        # The interested / not_interested response labels were removed — fold any
+        # existing rows back into the generic 'replied' label so they aren't stranded.
+        try:
+            conn.execute("UPDATE emails SET response_status='replied' "
+                         "WHERE response_status IN ('interested','not_interested')")
+        except Exception:
+            pass
 
 
 init_db()
@@ -341,64 +462,6 @@ def send_via_smtp(to, subject, body, cc="", bcc="", attachments="", sender_email
         server.sendmail(sender_email, recipients, outer.as_string())
 
 
-def send_via_outlook(to, subject, body, cc="", bcc="", attachments="", sender_email=""):
-    to_list = _parse_addrs(to)
-    if not to_list:
-        raise ValueError("No recipients specified")
-    cc_list = _parse_addrs(cc)
-    bcc_list = _parse_addrs(bcc)
-    attach_list = _parse_addrs(attachments)
-    body_cr = str(body).replace("\r\n", "\n").replace("\r", "\n").replace("\n", "\r")
-    tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8")
-    tmp.write(body_cr); tmp.close()
-    try:
-        parts = ['tell application "Microsoft Outlook"']
-        if sender_email:
-            se = _esc(sender_email)
-            parts.append(f'    set senderAcct to missing value\n'
-                         f'    try\n'
-                         f'        repeat with a in (every exchange account)\n'
-                         f'            if (email address of a) is "{se}" then\n'
-                         f'                set senderAcct to a\n'
-                         f'                exit repeat\n'
-                         f'            end if\n'
-                         f'        end repeat\n'
-                         f'    end try')
-        parts.append(f'    set msgBody to read POSIX file "{_esc(tmp.name)}"')
-        parts.append(f'    set msg to make new outgoing message with properties {{subject:"{_esc(str(subject))}"}}'  )
-        parts.append('    try\n        set |has html| of msg to false\n    end try')
-        parts.append('    set content of msg to msgBody')
-        if sender_email:
-            parts.append('    if senderAcct is not missing value then\n        set account of msg to senderAcct\n    end if')
-        for addr in to_list:
-            parts.append(f'    make new recipient at msg with properties {{email address:{{address:"{_esc(addr)}"}}}}')
-        for addr in cc_list:
-            parts.append(f'    make new cc recipient at msg with properties {{email address:{{address:"{_esc(addr)}"}}}}')
-        for addr in bcc_list:
-            parts.append(f'    make new bcc recipient at msg with properties {{email address:{{address:"{_esc(addr)}"}}}}')
-        for path in attach_list:
-            if os.path.exists(path):
-                parts.append(f'    make new attachment at msg with properties {{file:POSIX file "{_esc(path)}"}}')
-        parts += ["    send msg", "end tell"]
-        src = tempfile.NamedTemporaryFile(mode="w", suffix=".applescript", delete=False, encoding="utf-8")
-        src.write("\n".join(parts)); src.close()
-        scpt = src.name[:-len(".applescript")] + ".scpt"
-        try:
-            c = subprocess.run(["osacompile", "-o", scpt, src.name], capture_output=True, text=True)
-            if c.returncode != 0:
-                raise RuntimeError(c.stderr.strip() or "AppleScript compile failed")
-            r = subprocess.run(["osascript", scpt], capture_output=True, text=True)
-            if r.returncode != 0:
-                raise RuntimeError(r.stderr.strip() or "Unknown AppleScript error")
-        finally:
-            for p in (src.name, scpt):
-                try: os.unlink(p)
-                except Exception: pass
-    finally:
-        try: os.unlink(tmp.name)
-        except Exception: pass
-
-
 # ── Dispatch ───────────────────────────────────────────────────────────────────
 
 def _dispatch(email_id: int):
@@ -436,7 +499,9 @@ def _dispatch(email_id: int):
         elif mail_accounts:
             send_via_mail(**kwargs)
         else:
-            send_via_outlook(**kwargs)
+            raise RuntimeError("No Apple Mail account found and no SMTP password "
+                               "stored — cannot send. Set up Apple Mail or add an "
+                               "SMTP app password in account settings.")
 
         now_iso = datetime.now().isoformat()
         with get_db() as conn:
@@ -510,6 +575,42 @@ def _save_ar_settings(settings: dict):
             "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
             (json.dumps(settings),)
         )
+
+
+def _get_reply_settings() -> dict:
+    try:
+        with get_db() as conn:
+            row = conn.execute("SELECT value FROM settings WHERE key='reply_check'").fetchone()
+            if row:
+                s = json.loads(row["value"])
+                return {"enabled": bool(s.get("enabled", True)),
+                        "interval_minutes": max(5, int(s.get("interval_minutes", 60)))}
+    except Exception:
+        pass
+    return {"enabled": True, "interval_minutes": 60}
+
+
+def _save_reply_settings(settings: dict):
+    with get_db() as conn:
+        conn.execute(
+            "INSERT INTO settings (key, value) VALUES ('reply_check', ?) "
+            "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            (json.dumps(settings),)
+        )
+
+
+def _apply_reply_schedule():
+    """(Re)register or remove the periodic reply checker to match saved settings."""
+    s = _get_reply_settings()
+    try:
+        scheduler.remove_job("reply_checker")
+    except Exception:
+        pass
+    if s.get("enabled", True):
+        scheduler.add_job(
+            _check_replies_job, trigger="interval", minutes=s["interval_minutes"],
+            id="reply_checker", replace_existing=True, max_instances=1, coalesce=True,
+            misfire_grace_time=120, next_run_time=datetime.now() + timedelta(seconds=45))
 
 
 def _auto_reschedule_job():
@@ -787,9 +888,209 @@ end tell"""
             pass
 
 
+def _fetch_mail_body(msg_id):
+    """Fetch the plain-text content of one inbox message by its message id.
+    Reuses the per-message body-fetch pattern from the bounce checker."""
+    esc_id = msg_id.replace("\\", "\\\\").replace('"', '\\"')
+    body_script = f"""\
+tell application "Mail"
+    repeat with a in every account
+        set inb to missing value
+        repeat with mbname in {{"INBOX", "Inbox"}}
+            try
+                set inb to mailbox mbname of a
+                exit repeat
+            end try
+        end repeat
+        if inb is not missing value then
+            try
+                set found to (messages of inb whose message id is "{esc_id}")
+                if (count of found) > 0 then
+                    return content of item 1 of found
+                end if
+            end try
+        end if
+    end repeat
+    return ""
+end tell"""
+    try:
+        r = subprocess.run(["osascript", "-e", body_script],
+                           capture_output=True, text=True, timeout=30)
+        return r.stdout
+    except Exception:
+        return ""
+
+
+def _reply_snippet(body):
+    """Trim a reply body to a stored snippet: drop the quoted original thread and
+    cap the length so the DB stays small."""
+    if not body:
+        return ""
+    text = body.replace("\r\n", "\n").replace("\r", "\n")
+    kept = []
+    for line in text.split("\n"):
+        l = line.strip()
+        # Stop once the quoted original message / thread begins.
+        if l.startswith(">"):
+            break
+        if re.match(r"^On .+ wrote:$", l):
+            break
+        if l in ("-----Original Message-----", "________________________________"):
+            break
+        if l.startswith("From:") and kept:
+            break
+        kept.append(line)
+    snippet = "\n".join(kept).strip() or text.strip()
+    return snippet[:500].strip()
+
+
+# Responses that arrive within this window are treated as automated replies
+# (out-of-office / auto-acknowledgements) rather than genuine human replies.
+_AUTO_REPLY_MAX_SECONDS = 360  # 6 minutes
+
+
+def _check_replies(batch_id=None):
+    """Scan the Apple Mail inbox for replies from people we've emailed and mark the
+    matching sent email as 'replied', capturing the reply's body snippet, the time
+    it arrived (reply_received_at), and how long it took (reply_delta_seconds).
+
+    Targets two kinds of rows: emails still at response_status='none' (new replies),
+    and emails already marked 'replied' but missing reply_received_at (backfill the
+    timing for replies that were recorded before timing was captured / set by hand).
+    Returns the number of emails updated."""
+    params = []
+    where = ("WHERE status='sent' AND to_addr IS NOT NULL AND to_addr != '' "
+             "AND (response_status='none' "
+             "OR (response_status='replied' AND reply_received_at IS NULL))")
+    if batch_id:
+        where += " AND batch_id=?"; params.append(int(batch_id))
+    with get_db() as conn:
+        sent_rows = conn.execute(
+            f"SELECT id, to_addr, sent_at FROM emails {where}", params).fetchall()
+    if not sent_rows:
+        return 0
+    # Map each emailed address (lowercased) -> (email id, sent datetime).
+    targets = {}
+    for row in sent_rows:
+        addr = (row["to_addr"] or "").strip().lower()
+        if not addr:
+            continue
+        try:
+            sent_dt = datetime.fromisoformat(row["sent_at"]) if row["sent_at"] else None
+        except Exception:
+            sent_dt = None
+        targets[addr] = (row["id"], sent_dt)
+
+    # Pass 1 — list sender, message id, and received date of every recent inbox
+    # message. One line per message, tab-separated, so message content can't
+    # corrupt parsing (an AppleScript list return would comma-join and break).
+    list_script = """\
+tell application "Mail"
+    set cutoff to (current date) - (60 * days)
+    set out to ""
+    repeat with a in every account
+        set inb to missing value
+        repeat with mbname in {"INBOX", "Inbox"}
+            try
+                set inb to mailbox mbname of a
+                exit repeat
+            end try
+        end repeat
+        if inb is not missing value then
+            try
+                set msgs to (messages of inb whose date received >= cutoff)
+                repeat with m in msgs
+                    try
+                        set d to date received of m
+                        set out to out & (sender of m) & tab & (message id of m) & tab & (year of d) & tab & ((month of d) as integer) & tab & (day of d) & tab & (hours of d) & tab & (minutes of d) & tab & (seconds of d) & linefeed
+                    end try
+                end repeat
+            end try
+        end if
+    end repeat
+    return out
+end tell"""
+    try:
+        r = subprocess.run(["osascript", "-e", list_script],
+                           capture_output=True, text=True, timeout=120)
+    except Exception:
+        return 0
+
+    # For each emailed address, collect (reply_dt, message_id) candidates.
+    candidates = {}
+    for line in r.stdout.splitlines():
+        parts = line.rstrip("\n").split("\t")
+        if len(parts) < 8:
+            continue
+        sender, msg_id = parts[0], parts[1].strip()
+        m = re.search(r"[\w.+-]+@[\w.-]+\.\w+", sender)
+        if not m:
+            continue
+        addr = m.group(0).lower()
+        if addr not in targets:
+            continue
+        try:
+            y, mo, dd, hh, mi, ss = (int(x) for x in parts[2:8])
+            reply_dt = datetime(y, mo, dd, hh, mi, ss)
+        except Exception:
+            continue
+        candidates.setdefault(addr, []).append((reply_dt, msg_id))
+
+    marked = 0
+    for addr, items in candidates.items():
+        eid, sent_dt = targets[addr]
+        items.sort(key=lambda t: t[0])
+        # Only messages received at/after we sent can be a reply; fall back to all
+        # of them if none qualify (clock skew between Mail and this machine).
+        pool = [(dt, mid) for dt, mid in items if (sent_dt is None or dt >= sent_dt)] or items
+        if not pool:
+            continue
+        # A response that lands within a few minutes is almost always an auto-reply
+        # (out-of-office / auto-acknowledgement), not a human one. Prefer the
+        # earliest genuinely-human reply; only if every candidate is that fast do we
+        # record it as an automated response instead.
+        chosen, status = None, "replied"
+        for dt, mid in pool:
+            secs = (dt - sent_dt).total_seconds() if sent_dt else None
+            if secs is None or secs > _AUTO_REPLY_MAX_SECONDS:
+                chosen = (dt, mid); status = "replied"; break
+        if chosen is None:
+            chosen = pool[0]; status = "automated"
+        reply_dt, msg_id = chosen
+        delta = int((reply_dt - sent_dt).total_seconds()) if sent_dt else None
+        snippet = _reply_snippet(_fetch_mail_body(msg_id)) if msg_id else ""
+        with get_db() as conn:
+            # Fill timing for both new replies and already-recorded rows that never
+            # got a received time; keep any reply body already stored.
+            cur = conn.execute(
+                "UPDATE emails SET response_status=?, "
+                "reply_body=CASE WHEN reply_body IS NULL OR reply_body='' THEN ? ELSE reply_body END, "
+                "reply_received_at=?, reply_delta_seconds=? "
+                "WHERE id=? AND (response_status='none' OR reply_received_at IS NULL)",
+                (status, snippet, reply_dt.isoformat(), delta, eid))
+            if cur.rowcount:
+                label = "Automated response" if status == "automated" else "Reply"
+                _add_history(conn, eid, "response", f"{label} detected from {addr}")
+                marked += 1
+                print(f"  [reply] email {eid} ({addr}) {status} — received {reply_dt.isoformat()}")
+    return marked
+
+
+def _check_replies_job():
+    """Background wrapper: respect the user's enabled flag and never raise."""
+    try:
+        if not _get_reply_settings().get("enabled", True):
+            return
+        _check_replies()
+    except Exception as exc:
+        print(f"  [reply] periodic check failed: {exc}")
+
+
 scheduler.add_job(_check_bounces, trigger="interval", minutes=5, id="bounce_checker",
                   replace_existing=True, next_run_time=datetime.now())
 
+# Periodic reply scan — interval/on-off come from saved settings (hourly default).
+_apply_reply_schedule()
 
 
 # ── Business hours scheduler ───────────────────────────────────────────────────
@@ -856,7 +1157,6 @@ def _make_record(row, cols, now, batch_id, professor_mode=False) -> dict:
         "subject": _clean(row.get("subject", "")),
         "body": _clean(row.get("body", "")).replace("\\n", "\n"),
         "attachments": _clean(row.get("attachments", "")) if "attachments" in cols else "",
-        "professor_link": _clean(row.get("professor_link", "")) if "professor_link" in cols else "",
         "send_time": iso,
         "send_time_str": display,
         "status": status,
@@ -1069,7 +1369,6 @@ def get_emails():
     per_page = max(1, int(request.args.get("per_page", 50)))
     status_filter = request.args.get("status", "")
     batch_id = request.args.get("batch_id", "")
-    has_professor_link = request.args.get("has_professor_link", "")
     duplicate_warning = request.args.get("duplicate_warning", "")
     has_warning = request.args.get("has_warning", "")
 
@@ -1078,8 +1377,6 @@ def get_emails():
         clauses.append("status=?"); params.append(status_filter)
     if batch_id:
         clauses.append("batch_id=?"); params.append(int(batch_id))
-    if has_professor_link:
-        clauses.append("professor_link != '' AND professor_link IS NOT NULL")
     if duplicate_warning:
         clauses.append("duplicate_warning=?"); params.append(int(duplicate_warning))
     if has_warning:
@@ -1117,11 +1414,11 @@ def create_email():
         dup = _check_duplicate(conn, to_addr)
         body = data.get("body", ""); subject = data.get("subject", "")
         cur = conn.execute(
-            "INSERT INTO emails (batch_id, to_addr, cc, bcc, subject, body, attachments, professor_link,"
-            "send_time, send_time_str, status, duplicate_warning, content_warning, notes, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO emails (batch_id, to_addr, cc, bcc, subject, body, attachments,"
+            "send_time, send_time_str, status, duplicate_warning, content_warning, notes, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (data.get("batch_id"), to_addr, data.get("cc", ""), data.get("bcc", ""),
              subject, body, data.get("attachments", ""),
-             data.get("professor_link", ""), send_time, send_time_str, status,
+             send_time, send_time_str, status,
              1 if dup else 0, 1 if _has_content_warning(body, subject) else 0,
              data.get("notes", ""), now.isoformat())
         )
@@ -1153,8 +1450,7 @@ def update_email(eid):
         old = row_to_dict(row); changed_old, changed_new = {}, {}
         for field, col in [("to", "to_addr"), ("cc", "cc"), ("bcc", "bcc"),
                             ("subject", "subject"), ("body", "body"),
-                            ("attachments", "attachments"), ("notes", "notes"),
-                            ("professor_link", "professor_link")]:
+                            ("attachments", "attachments"), ("notes", "notes")]:
             if field in data:
                 val = str(data[field])
                 conn.execute(f"UPDATE emails SET {col}=? WHERE id=?", (val, eid))
@@ -1218,7 +1514,7 @@ def verify_email(eid):
         row = conn.execute("SELECT * FROM emails WHERE id=?", (eid,)).fetchone()
         if not row: return jsonify({"error": "Not found"}), 404
         conn.execute("UPDATE emails SET status='verified', manually_edited=1 WHERE id=?", (eid,))
-        _add_history(conn, eid, "status", "Email verified — professor link confirmed")
+        _add_history(conn, eid, "status", "Email verified")
         row = conn.execute("SELECT * FROM emails WHERE id=?", (eid,)).fetchone()
     return jsonify(row_to_dict(row))
 
@@ -1238,7 +1534,7 @@ def unverify_email(eid):
 def set_response(eid):
     data = request.json or {}
     rs = data.get("response_status", "none")
-    allowed = {"none", "replied", "interested", "not_interested", "bounced"}
+    allowed = {"none", "replied", "automated", "bounced"}
     if rs not in allowed: return jsonify({"error": "Invalid response status"}), 400
     with get_db() as conn:
         if not conn.execute("SELECT id FROM emails WHERE id=?", (eid,)).fetchone():
@@ -1288,6 +1584,98 @@ def get_stats():
     return jsonify(counts)
 
 
+def _classify_error(err):
+    """Bucket a failure error message into a delivery-problem category."""
+    e = (err or "").lower()
+    if "timed out" in e or "timeout" in e:
+        return "timed_out"
+    if any(k in e for k in ("bounce", "delivery failed", "undeliverable",
+                            "does not exist", "no such", "recipient", "mailbox", "not found")):
+        return "bounced"
+    if any(k in e for k in ("auth", "535", "password", "login", "credential")):
+        return "auth"
+    if any(k in e for k in ("smtp", "connection", "network", "refused", "connect")):
+        return "network"
+    if any(k in e for k in ("mail got an error", "applescript", "osascript",
+                            "execution error", "-1728", "-1700")):
+        return "mailapp"
+    return "other"
+
+
+@app.route("/api/insights")
+def get_insights():
+    """Full breakdown of what happened to emails — by status, failure type, and
+    response outcome — scoped to a batch (?batch_id=) or across all emails."""
+    batch_id = request.args.get("batch_id", "")
+    params = []; where = "WHERE 1=1"
+    if batch_id:
+        where += " AND batch_id=?"; params.append(int(batch_id))
+    with get_db() as conn:
+        status_rows = conn.execute(
+            f"SELECT status, COUNT(*) AS c FROM emails {where} GROUP BY status", params).fetchall()
+        resp_rows = conn.execute(
+            f"SELECT response_status AS rs, COUNT(*) AS c FROM emails {where} GROUP BY response_status", params).fetchall()
+        fail_rows = conn.execute(
+            f"SELECT error FROM emails {where} AND status='failed'", params).fetchall()
+        total = conn.execute(f"SELECT COUNT(*) AS c FROM emails {where}", params).fetchone()["c"]
+        timing = conn.execute(
+            f"SELECT COUNT(*) AS c, AVG(reply_delta_seconds) AS avg,"
+            f" MIN(reply_delta_seconds) AS fastest, MAX(reply_delta_seconds) AS slowest"
+            f" FROM emails {where} AND reply_delta_seconds IS NOT NULL", params).fetchone()
+        tl_rows = conn.execute(
+            f"SELECT substr(reply_received_at,1,10) AS day, COUNT(*) AS c"
+            f" FROM emails {where} AND reply_received_at IS NOT NULL AND reply_received_at != ''"
+            f" GROUP BY day ORDER BY day", params).fetchall()
+    status = {s: 0 for s in ("needs_review", "verified", "pending", "scheduled",
+                             "overdue", "sending", "sent", "skipped", "invalid", "failed")}
+    for r in status_rows:
+        if r["status"] in status:
+            status[r["status"]] = r["c"]
+    responses = {s: 0 for s in ("none", "replied", "automated", "bounced")}
+    for r in resp_rows:
+        if r["rs"] in responses:
+            responses[r["rs"]] = r["c"]
+    failures = {s: 0 for s in ("bounced", "timed_out", "auth", "network", "mailapp", "other")}
+    for r in fail_rows:
+        failures[_classify_error(r["error"])] += 1
+    sent = status["sent"]
+    replies = responses["replied"]
+    reply_metrics = {
+        "sent": sent,
+        "replies": replies,
+        "reply_rate": round(replies / sent, 4) if sent else 0,
+        "delivery_rate": round((sent - failures["bounced"]) / sent, 4) if sent else 0,
+        "with_timing": timing["c"] or 0,
+        "avg_seconds": int(timing["avg"]) if timing["avg"] is not None else None,
+        "fastest_seconds": timing["fastest"],
+        "slowest_seconds": timing["slowest"],
+    }
+    timeline = [{"day": r["day"], "count": r["c"]} for r in tl_rows]
+    return jsonify({"total": total, "status": status,
+                    "responses": responses, "failures": failures,
+                    "reply_metrics": reply_metrics, "timeline": timeline})
+
+
+@app.route("/api/replies")
+def get_replies():
+    """List the emails that got a reply, scoped to a batch (?batch_id=) or across
+    all emails."""
+    batch_id = request.args.get("batch_id", "")
+    where = "WHERE e.response_status = 'replied'"
+    params = []
+    if batch_id:
+        where += " AND e.batch_id=?"; params.append(int(batch_id))
+    with get_db() as conn:
+        rows = conn.execute(
+            f"SELECT e.id, e.to_addr, e.subject, e.response_status, e.sent_at,"
+            f" e.reply_body, e.reply_received_at, e.reply_delta_seconds,"
+            f" b.name AS batch_name"
+            f" FROM emails e LEFT JOIN batches b ON b.id=e.batch_id {where}"
+            f" ORDER BY e.reply_received_at DESC, e.sent_at DESC, e.id DESC", params
+        ).fetchall()
+    return jsonify({"replies": [dict(r) for r in rows]})
+
+
 # ── Warnings ───────────────────────────────────────────────────────────────────
 
 @app.route("/api/warnings")
@@ -1305,14 +1693,16 @@ def get_warnings():
             f" LEFT JOIN sent_address_log s ON LOWER(s.email_addr)=LOWER(e.to_addr)"
             f" {dw} ORDER BY e.created_at DESC", dp
         ).fetchall()
-        fw = "WHERE e.status='failed' AND e.error IS NOT NULL AND e.error!=''"
+        # Every failed email counts — including ones with no stored error text —
+        # so this matches the Failed total shown elsewhere.
+        fw = "WHERE e.status='failed'"
         fp = []
         if batch_id:
             fw += " AND e.batch_id=?"; fp.append(int(batch_id))
         failures = conn.execute(
             f"SELECT e.id, e.to_addr, e.subject, e.error, e.sent_at, b.name AS batch_name"
             f" FROM emails e LEFT JOIN batches b ON b.id=e.batch_id"
-            f" {fw} ORDER BY e.created_at DESC LIMIT 50", fp
+            f" {fw} ORDER BY e.created_at DESC LIMIT 500", fp
         ).fetchall()
         cw = "WHERE e.content_warning=1"
         cp = []
@@ -1438,10 +1828,14 @@ def bulk_shift_time():
 @app.route("/api/bulk-skip", methods=["POST"])
 def bulk_skip():
     data = request.json or {}; ids = data.get("ids", [])
+    # When resolve=True, also clear any duplicate warning (mark it resolved) so a
+    # skipped duplicate stops showing as an open warning.
+    resolve = bool(data.get("resolve"))
+    sql = ("UPDATE emails SET status='skipped'"
+           + (", duplicate_warning=2" if resolve else "")
+           + " WHERE id=? AND status NOT IN ('sent','sending')")
     with get_db() as conn:
-        count = sum(conn.execute(
-            "UPDATE emails SET status='skipped' WHERE id=? AND status NOT IN ('sent','sending')", (i,)
-        ).rowcount for i in ids)
+        count = sum(conn.execute(sql, (i,)).rowcount for i in ids)
     return jsonify({"success": True, "count": count})
 
 
@@ -1516,6 +1910,19 @@ def bulk_move_batch():
 def check_bounces_now():
     threading.Thread(target=_check_bounces, daemon=True).start()
     return jsonify({"ok": True, "message": "Bounce check started"})
+
+
+@app.route("/api/check-replies", methods=["POST"])
+def check_replies_now():
+    """Scan the inbox for replies. Runs synchronously so the UI can report how
+    many were found. Optional {batch_id} limits the scan to one batch."""
+    data = request.json or {}
+    batch_id = data.get("batch_id")
+    try:
+        marked = _check_replies(int(batch_id) if batch_id else None)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+    return jsonify({"success": True, "marked": marked})
 
 
 @app.route("/api/reset", methods=["POST"])
@@ -1669,10 +2076,10 @@ def upload():
             dup = _check_duplicate(conn, rec["to_addr"])
             cw = 1 if _has_content_warning(rec["body"], rec["subject"]) else 0
             cur = conn.execute(
-                "INSERT INTO emails (batch_id, to_addr, cc, bcc, subject, body, attachments, professor_link,"
-                "send_time, send_time_str, status, duplicate_warning, content_warning, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO emails (batch_id, to_addr, cc, bcc, subject, body, attachments,"
+                "send_time, send_time_str, status, duplicate_warning, content_warning, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (rec["batch_id"], rec["to_addr"], rec["cc"], rec["bcc"], rec["subject"], rec["body"],
-                 rec["attachments"], rec["professor_link"], rec["send_time"], rec["send_time_str"],
+                 rec["attachments"], rec["send_time"], rec["send_time_str"],
                  rec["status"], 1 if dup else 0, cw, rec["created_at"])
             )
             _add_history(conn, cur.lastrowid, "created", "Imported from CSV"); count += 1
@@ -1714,9 +2121,9 @@ def export_all_addresses():
 def sample_csv():
     now = datetime.now()
     lines = [
-        "to,subject,body,send_time,professor_link,cc,bcc,attachments",
-        f'professor@university.edu,Research Opportunity Inquiry,"Dear Professor Smith,\n\nI am a junior at Collin College majoring in Computer Science interested in your ML research.\n\nBest regards,\nAryan Patel",{now.strftime("%Y-%m-%d %H:%M")},https://cs.university.edu/faculty/smith,,,',
-        f'prof2@university.edu,Undergraduate Research Inquiry,"Dear Professor Jones,\n\nI came across your paper on distributed systems and found it fascinating.\n\nBest,\nAryan",{now.strftime("%Y-%m-%d %H:%M")},https://cs.university.edu/faculty/jones,,,',
+        "to,subject,body,send_time,cc,bcc,attachments",
+        f'professor@university.edu,Research Opportunity Inquiry,"Dear Professor Smith,\n\nI am a junior at Collin College majoring in Computer Science interested in your ML research.\n\nBest regards,\nAryan Patel",{now.strftime("%Y-%m-%d %H:%M")},,,',
+        f'prof2@university.edu,Undergraduate Research Inquiry,"Dear Professor Jones,\n\nI came across your paper on distributed systems and found it fascinating.\n\nBest,\nAryan",{now.strftime("%Y-%m-%d %H:%M")},,,',
     ]
     buf = io.BytesIO("\n".join(lines).encode())
     return send_file(buf, mimetype="text/csv", as_attachment=True, download_name="sample_emails.csv")
@@ -1903,6 +2310,65 @@ def post_ar_settings_route():
     }
     _save_ar_settings(settings)
     return jsonify({"success": True, "settings": settings})
+
+
+@app.route("/api/reply-check-settings", methods=["GET"])
+def get_reply_settings_route():
+    return jsonify(_get_reply_settings())
+
+
+@app.route("/api/reply-check-settings", methods=["POST"])
+def post_reply_settings_route():
+    data = request.json or {}
+    settings = {
+        "enabled": bool(data.get("enabled", True)),
+        "interval_minutes": max(5, int(data.get("interval_minutes", 60))),
+    }
+    _save_reply_settings(settings)
+    _apply_reply_schedule()
+    return jsonify({"success": True, "settings": settings})
+
+
+# ── Updates ──────────────────────────────────────────────────────────────────────
+
+@app.route("/api/version")
+def api_version():
+    """Current vs. latest version. Cached so the GitHub API isn't hammered."""
+    return jsonify(_compute_update(force=False))
+
+
+@app.route("/api/check-update", methods=["POST"])
+def api_check_update():
+    """Force a fresh check against GitHub, bypassing the cache."""
+    return jsonify(_compute_update(force=True))
+
+
+@app.route("/api/update", methods=["POST"])
+def api_update():
+    """Pull the latest code (fast-forward only) and restart in place to apply it."""
+    if not _is_git_repo():
+        return jsonify({"success": False, "error": "Not a git checkout — update manually."}), 400
+    before = _local_commit()
+    fcode, _, ferr = _git("fetch", "origin", GITHUB_BRANCH)
+    if fcode != 0:
+        return jsonify({"success": False, "error": ferr or "git fetch failed"}), 500
+    mcode, mout, merr = _git("merge", "--ff-only", f"origin/{GITHUB_BRANCH}")
+    if mcode != 0:
+        msg = merr or mout or "git merge failed"
+        if "local changes" in msg.lower() or "overwritten" in msg.lower():
+            msg = "You have local changes that would be overwritten. Commit or discard them first."
+        return jsonify({"success": False, "error": msg}), 409
+    after = _local_commit()
+    updated = bool(after and after != before)
+    reqs_changed = False
+    if updated:
+        dcode, dout, _ = _git("diff", "--name-only", before, after)
+        reqs_changed = dcode == 0 and "requirements.txt" in dout.split("\n")
+    _compute_update(force=True)  # refresh cache so the banner clears
+    if updated:
+        _restart_process(install_deps=reqs_changed)
+    return jsonify({"success": True, "updated": updated, "restarting": updated,
+                    "current": after, "current_short": after[:7] if after else None})
 
 
 @app.route("/api/shutdown", methods=["POST"])

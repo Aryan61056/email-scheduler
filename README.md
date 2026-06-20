@@ -2,9 +2,8 @@
 
 A personal cold-email campaign manager for macOS. Import a CSV of recipients,
 review and verify each message, schedule them across realistic business hours,
-and send them through **Apple Mail**, **Microsoft Outlook**, or **SMTP** — all
-from a clean local web interface. It also tracks replies and automatically
-detects bounces.
+and send them through **Apple Mail** or **SMTP** — all from a clean local web
+interface. It also automatically detects bounces.
 
 Built for one-person outreach campaigns, not bulk
 marketing. Everything runs locally on your Mac; no data leaves your machine.
@@ -13,11 +12,11 @@ marketing. Everything runs locally on your Mac; no data leaves your machine.
 
 ## Requirements
 
-- **macOS** (sending uses AppleScript to drive Apple Mail / Outlook)
+- **macOS** (sending uses AppleScript to drive Apple Mail)
 - **Python 3** — check with `python3 --version`. If missing, install from
   [python.org](https://www.python.org/downloads/) or run `brew install python`.
-- **Apple Mail or Microsoft Outlook** set up with the account you want to send
-  from. (Alternatively, configure SMTP — see below.)
+- **Apple Mail** set up with the account you want to send from. (Alternatively,
+  configure SMTP — see below.)
 
 ---
 
@@ -49,17 +48,31 @@ When you schedule an email, Email Scheduler picks a send method automatically:
 
 1. **SMTP** — if you've stored an app password for the account (Office 365 SMTP).
 2. **Apple Mail** — if Mail has accounts configured (default).
-3. **Microsoft Outlook** — as a fallback.
 
-Sending via Apple Mail or Outlook drives the app with AppleScript, so the
-corresponding app must be installed and signed in. The first send may trigger a
-macOS prompt asking to allow automation — click **OK**.
+Sending via Apple Mail drives the app with AppleScript, so Mail must be installed
+and signed in. The first send may trigger a macOS prompt asking to allow
+automation — click **OK**.
 
 ### Using SMTP instead
 
 In the app, open the account settings and store an app password for your
 address. Passwords are kept in the **macOS Keychain** (never written to disk or
 committed). Once set, that account sends over SMTP (Office 365, port 587).
+
+---
+
+## Staying up to date
+
+The app checks GitHub for new versions automatically. When a newer version is
+available, a banner appears at the top with **Update now** — one click pulls the
+latest code and restarts the app for you (the page reloads on its own). You can
+also trigger a check anytime via **Check for updates** at the bottom of the
+sidebar.
+
+This works as long as you got the app by cloning the repository with `git` (the
+default). If you have uncommitted local changes, the one-click update is skipped
+to avoid clobbering them — commit or discard them, or just run `git pull`
+yourself.
 
 ---
 
@@ -75,7 +88,6 @@ Upload a CSV with these columns:
 | `send_time` | no | ISO timestamp; otherwise schedule it in-app |
 | `cc`, `bcc` | no | comma-separated |
 | `attachments` | no | file path(s) |
-| `professor_link` | no | a link to verify the recipient before sending |
 
 Grab a working template from **Download sample CSV** in the app, or the
 `GET /api/sample-csv` endpoint.
@@ -89,7 +101,7 @@ sending to a wrong or hallucinated address.
 ## The workflow
 
 ```
-Import CSV  →  Review & Verify  →  Schedule  →  Send  →  Track replies / bounces
+Import CSV  →  Review & Verify  →  Schedule  →  Send  →  Track bounces
 ```
 
 - **Review** every message one at a time (keyboard: Enter to approve, ← back, S to skip).
@@ -130,8 +142,7 @@ No build step, no npm, no framework — just Python and a single HTML file.
 
 - **"Port 5001 in use"** — the launcher clears it automatically. To do it
   manually: `lsof -ti :5001 | xargs kill -9`.
-- **Emails don't send** — make sure Apple Mail or Outlook is open and signed in,
-  and that you allowed the automation prompt. Check the launcher window for
-  errors.
+- **Emails don't send** — make sure Apple Mail is open and signed in, and that
+  you allowed the automation prompt. Check the launcher window for errors.
 - **Reset everything** — delete `scheduler.db`, `scheduler.db-shm`, and
   `scheduler.db-wal`, then relaunch.

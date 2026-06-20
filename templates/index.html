@@ -194,8 +194,7 @@ tbody tr:hover .row-btn{opacity:1}
 .rs-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:100px;font-size:11px;font-weight:600}
 .rs-none       {background:#f3f4f6;color:#9ca3af}
 .rs-replied    {background:#f3e8ff;color:#7c3aed}
-.rs-interested {background:#fef3c7;color:#b45309}
-.rs-not_interested{background:#f3f4f6;color:#6b7280}
+.rs-automated  {background:#e0f2fe;color:#0369a1}
 .rs-bounced    {background:#fee2e2;color:#b91c1c}
 
 /* Edited pip */
@@ -331,6 +330,83 @@ input[type=checkbox]{accent-color:var(--primary)}
 .warn-panel-head { display:flex; align-items:center; justify-content:space-between; cursor:pointer }
 .warn-item { display:flex; align-items:flex-start; gap:8px; padding:6px 0; border-bottom:1px solid #fde68a; font-size:12.5px }
 .warn-item:last-child { border-bottom:none }
+.warn-tabs { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; padding-bottom:9px; border-bottom:1px solid #fde68a }
+.warn-tab { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; color:#92400e; background:#fef9ec; border:1px solid #fde68a; border-radius:100px; padding:3px 10px; cursor:pointer; transition:background var(--t),color var(--t),border-color var(--t) }
+.warn-tab:hover { background:#fef3c7 }
+.warn-tab.active { background:#92400e; color:#fffbeb; border-color:#92400e }
+.warn-tab-bdg { font-family:'Fira Code',monospace; font-size:10px; font-weight:700; background:rgba(146,64,14,.12); color:inherit; border-radius:100px; padding:0 5px; min-width:15px; text-align:center }
+.warn-tab.active .warn-tab-bdg { background:rgba(255,255,255,.22) }
+.warn-type { flex-shrink:0; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; border-radius:4px; padding:1px 6px; white-space:nowrap }
+.warn-type.bounced { background:#fee2e2; color:#b91c1c; border:1px solid #fecaca }
+.warn-type.auth    { background:#ffedd5; color:#9a3412; border:1px solid #fed7aa }
+.warn-type.network { background:#fef3c7; color:#92400e; border:1px solid #fde68a }
+.warn-type.mailapp { background:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe }
+.warn-type.timeout { background:#f3e8ff; color:#6b21a8; border:1px solid #e9d5ff }
+.warn-type.other   { background:#f1f5f9; color:#475569; border:1px solid #e2e8f0 }
+.warn-resolved { flex-shrink:0; display:inline-flex; align-items:center; gap:2px; font-size:10px; font-weight:700; color:#15803d; background:#dcfce7; border:1px solid #bbf7d0; border-radius:4px; padding:1px 6px; white-space:nowrap }
+.warn-item.is-resolved { opacity:.55 }
+.warn-btn-disabled { opacity:.4 !important; cursor:not-allowed !important }
+/* Failed sends — clean header with a per-type summary */
+.warn-fail-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px }
+.warn-fail-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#b91c1c }
+.warn-fail-summary { font-size:11px; color:#9ca3af }
+.warn-fail-item { gap:8px }
+.warn-fail-item .warn-type { align-self:flex-start; margin-top:1px }
+.warn-tab.wt-error { color:#b91c1c; border-color:#fecaca; background:#fef2f2 }
+.warn-tab.wt-error:hover { background:#fee2e2 }
+.warn-tab.wt-error.active { background:#dc2626; color:#fff; border-color:#dc2626 }
+.warn-tab.wt-error .warn-tab-bdg { background:rgba(185,28,28,.12) }
+.warn-tab.wt-error.active .warn-tab-bdg { background:rgba(255,255,255,.22) }
+/* Sidebar footer — author credit with hover reveal */
+.made-by { display:flex; align-items:center; gap:8px; font-size:11px; min-height:18px }
+.made-by-text { font-weight:500; color:oklch(0.70 0.012 220); letter-spacing:.01em }
+.made-by-link { opacity:0; transform:translateX(-3px); pointer-events:none; font-size:10px; font-weight:600; color:var(--primary); background:oklch(0.28 0.02 220); border:1px solid var(--sidebar-border); border-radius:100px; padding:2px 9px; text-decoration:none; white-space:nowrap; transition:opacity var(--t),transform var(--t),background var(--t) }
+.made-by:hover .made-by-link { opacity:1; transform:none; pointer-events:auto }
+.made-by-link:hover { background:oklch(0.32 0.025 220) }
+/* Sidebar Import CSV call-to-action */
+.sb-cta { display:flex; align-items:center; justify-content:center; gap:7px; width:100%; padding:9px 12px; margin-bottom:6px; font-size:13px; font-weight:600; color:#fff; background:var(--primary); border:none; border-radius:var(--r-xs); cursor:pointer; box-shadow:0 1px 3px oklch(0.20 0.025 220/.35); transition:background var(--t),transform var(--t),box-shadow var(--t) }
+.sb-cta:hover { background:oklch(0.67 0.16 195); transform:translateY(-1px); box-shadow:0 2px 6px oklch(0.20 0.025 220/.45) }
+.sb-cta:active { transform:none }
+/* Sidebar End App button */
+.sb-stop { display:flex; align-items:center; justify-content:center; gap:6px; width:100%; padding:7px 10px; font-size:12.5px; font-weight:600; color:oklch(0.74 0.09 25); background:transparent; border:1px solid var(--sidebar-border); border-radius:var(--r-xs); cursor:pointer; transition:background var(--t),color var(--t),border-color var(--t) }
+.sb-stop:hover { background:oklch(0.32 0.09 25); color:#fff; border-color:oklch(0.45 0.13 25) }
+/* Stats / insights grid */
+.stat-group-lbl { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:16px 0 8px }
+.stat-group-lbl:first-child { margin-top:0 }
+.stat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px }
+.stat-cell { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-xs); padding:10px 12px }
+.stat-cell .sv { font-family:'Fira Code',monospace; font-size:20px; font-weight:700; line-height:1.1; color:var(--text) }
+.stat-cell .sl { font-size:11.5px; color:var(--text2); margin-top:3px }
+.stat-cell.accent .sv { color:var(--primary) }
+.stat-cell.good .sv { color:#16a34a }
+.stat-cell.warn .sv { color:#d97706 }
+.stat-cell.bad .sv { color:#dc2626 }
+.stat-cell.zero { opacity:.5 }
+.stat-cell .sp { font-size:10.5px; color:var(--muted); margin-top:1px; font-family:'Fira Code',monospace }
+.reply-row { display:flex; align-items:center; gap:10px; padding:10px 2px; border-bottom:1px solid var(--border) }
+.reply-row:last-child { border-bottom:none }
+.reply-snippet { font-size:12px; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:6px 9px; margin-top:6px; white-space:pre-wrap; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; max-height:66px; line-height:1.45 }
+/* Stats charts */
+.stat-headline { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:6px }
+.bigcard { background:linear-gradient(135deg,var(--surface),var(--card)); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px }
+.bigcard .bv { font-family:'Fira Code',monospace; font-size:30px; font-weight:800; line-height:1; letter-spacing:-.02em }
+.bigcard .bl { font-size:12px; font-weight:600; color:var(--text); margin-top:6px }
+.bigcard .bs { font-size:11px; color:var(--muted); margin-top:2px }
+.bigcard.teal .bv { color:var(--primary) } .bigcard.green .bv { color:#16a34a } .bigcard.violet .bv { color:#7c3aed }
+.pbar { display:flex; height:26px; border-radius:7px; overflow:hidden; background:var(--surface); border:1px solid var(--border) }
+.pbar-seg { transition:width 350ms ease }
+.pbar-legend { display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; font-size:11.5px; color:var(--text2) }
+.pbar-leg { display:inline-flex; align-items:center; gap:5px } .pbar-leg i { width:10px; height:10px; border-radius:3px; flex-shrink:0 }
+.funnel { display:flex; flex-direction:column; gap:7px }
+.funnel-row { display:flex; align-items:center; gap:10px }
+.funnel-lbl { width:78px; font-size:12px; color:var(--text2); flex-shrink:0 }
+.funnel-track { flex:1; height:18px; background:var(--surface); border-radius:5px; overflow:hidden }
+.funnel-fill { height:100%; border-radius:5px; min-width:2px; transition:width 350ms ease }
+.funnel-val { width:58px; text-align:right; font-family:'Fira Code',monospace; font-size:12.5px; font-weight:700; flex-shrink:0 }
+.tl-chart { display:flex; align-items:flex-end; gap:4px; height:120px; padding:8px 2px 0; overflow-x:auto }
+.tl-col { flex:1; min-width:18px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100% }
+.tl-bar { width:70%; max-width:30px; background:linear-gradient(180deg,var(--primary),oklch(0.72 0.13 195)); border-radius:4px 4px 0 0; min-height:3px; transition:height 350ms ease }
+.tl-x { font-size:9.5px; color:var(--muted); margin-top:5px; white-space:nowrap; font-family:'Fira Code',monospace }
 
 /* Professor review full-screen overlay */
 .pv-screen { position:fixed; inset:0; z-index:200; display:none; flex-direction:column; background:var(--bg) }
@@ -378,13 +454,33 @@ input[type=checkbox]{accent-color:var(--primary)}
     </div>
     <div class="sb-divider"></div>
     <div class="sb-section">
-      <button class="sb-add" onclick="openImportModal()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <button class="sb-cta" onclick="openImportModal()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         Import CSV
+      </button>
+      <button class="sb-add" onclick="openReplies()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        Replies
+        <span class="sb-count" id="sb-replies-count" style="margin-left:auto">0</span>
+      </button>
+      <button class="sb-add" onclick="openStats()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Stats
       </button>
     </div>
     <div style="margin-top:auto;padding:10px 14px 14px;border-top:1px solid var(--sidebar-border)">
-      <div style="font-size:10px;color:var(--sidebar-muted)">made by Aryan P</div>
+      <button class="sb-stop" onclick="stopApp()" title="Quit Email Scheduler (stops the local server)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg>
+        End App
+      </button>
+      <div class="made-by" style="margin-top:11px">
+        <span class="made-by-text">Made by Aryan Patel</span>
+        <a class="made-by-link" href="https://github.com/Aryan61056/email-scheduler" target="_blank" rel="noopener">Learn more →</a>
+      </div>
+      <div id="sb-version" style="margin-top:8px;font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span id="sb-version-text">checking…</span>
+        <a href="#" onclick="forceCheckUpdate(event)" style="color:var(--primary);text-decoration:none">Check for updates</a>
+      </div>
     </div>
   </aside>
 
@@ -392,9 +488,15 @@ input[type=checkbox]{accent-color:var(--primary)}
   <main class="main">
     <!-- Topbar -->
     <div class="topbar">
-      <span id="topbar-from-label" style="font-size:11px;color:var(--muted);margin-right:auto;display:none">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        sending from <span id="topbar-from-email" style="color:var(--text2);font-weight:500"></span>
+      <span id="topbar-from-label" style="font-size:11px;color:var(--muted);margin-right:auto;display:none;align-items:center;gap:8px">
+        <span style="display:inline-flex;align-items:center">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          sending from&nbsp;<span id="topbar-from-email" style="color:var(--text2);font-weight:500"></span>
+        </span>
+        <button class="btn btn-ghost btn-sm" onclick="editCurrentBatch()" title="Change this batch's sending account" style="padding:2px 9px;font-size:11px;font-weight:600">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit
+        </button>
       </span>
       <div class="dropdown" id="export-dd">
         <button class="btn btn-ghost btn-sm" onclick="toggleDD('export-dd')">
@@ -446,6 +548,20 @@ input[type=checkbox]{accent-color:var(--primary)}
       </button>
     </div>
 
+    <!-- Update banner -->
+    <div id="update-banner" style="display:none;align-items:center;gap:12px;margin:0 0 16px;padding:10px 14px;background:oklch(0.96 0.05 195);border:1px solid var(--primary);border-radius:var(--r-xs);font-size:13px;color:var(--text)">
+      <span style="font-size:16px;line-height:1">✨</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600" id="update-banner-text">A new version is available.</div>
+        <div id="update-banner-sub" style="font-size:11.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+      </div>
+      <a id="update-banner-link" href="https://github.com/Aryan61056/email-scheduler" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">What's changed</a>
+      <button class="btn btn-teal btn-sm" id="update-banner-btn" onclick="doUpdate()">Update now</button>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="dismissUpdateBanner()" title="Dismiss">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
     <!-- Title bar -->
     <div class="main-header">
       <div class="main-title">
@@ -465,10 +581,6 @@ input[type=checkbox]{accent-color:var(--primary)}
         <button class="btn btn-teal btn-sm" onclick="openComposeModal()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New Email
-        </button>
-        <button class="btn btn-ghost btn-sm btn-icon" onclick="stopApp()" title="Quit Email Scheduler (stops the local server)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg>
-          Stop App
         </button>
       </div>
     </div>
@@ -670,11 +782,6 @@ input[type=checkbox]{accent-color:var(--primary)}
           <input id="cf-attach" placeholder="/path/to/resume.pdf">
           <div class="fg-hint">Comma-separated absolute paths</div>
         </div>
-      </div>
-      <div class="fg">
-        <label>Professor Link (optional)</label>
-        <input id="cf-prof-link" type="url" placeholder="https://cs.university.edu/faculty/smith">
-        <div class="fg-hint">Faculty page URL — used during email verification review</div>
       </div>
       <div class="fg">
         <label>Notes (private)</label>
@@ -1096,6 +1203,55 @@ input[type=checkbox]{accent-color:var(--primary)}
   </div>
 </div>
 
+<!-- Stats / insights modal -->
+<div class="overlay" id="m-stats">
+  <div class="modal wide">
+    <div class="modal-head">
+      <h2>Email Stats</h2>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="closeModal('m-stats')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="stats-scope" style="font-size:12.5px;color:var(--text2);margin-bottom:14px"></div>
+      <div id="stats-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Replies modal -->
+<div class="overlay" id="m-replies">
+  <div class="modal wide">
+    <div class="modal-head">
+      <h2>Replies received</h2>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="closeModal('m-replies')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;flex-wrap:wrap">
+        <div id="replies-scope" style="font-size:12.5px;color:var(--text2)"></div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <label style="font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:5px">Auto-check
+            <select id="reply-freq" onchange="saveReplyFreq()" style="font-size:12px;padding:3px 6px;width:auto">
+              <option value="off">Off</option>
+              <option value="15">Every 15 min</option>
+              <option value="30">Every 30 min</option>
+              <option value="60">Hourly</option>
+              <option value="1440">Daily</option>
+            </select>
+          </label>
+          <button class="btn btn-teal btn-sm" id="replies-check-btn" onclick="checkReplies()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Check now
+          </button>
+        </div>
+      </div>
+      <div id="replies-content"></div>
+    </div>
+  </div>
+</div>
+
 <div id="toasts"></div>
 
 <!-- ════════════════ JAVASCRIPT ════════════════ -->
@@ -1123,6 +1279,8 @@ const S = {
   warnings: { duplicates: [], failures: [] },
   warnDismissed: false,
   warnPanelOpen: true,
+  warnFilter: 'all',
+  version: null,
 };
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
@@ -1199,7 +1357,107 @@ function switchTab(modal, tab){
 async function init(){
   await Promise.all([fetchBatches(), loadAccounts(), loadARSettings()]);
   fetchTable(); fetchStats(); fetchWarnings();
+  checkVersion();
   S.poll = setInterval(()=>{ fetchTable(); fetchStats(); fetchBatches(); fetchWarnings(); }, 4000);
+}
+
+// ── Updates ───────────────────────────────────────────────────────────────────
+async function checkVersion(force=false){
+  try{
+    const res = await fetch(force ? '/api/check-update' : '/api/version',
+                            force ? {method:'POST'} : {});
+    S.version = await res.json();
+  }catch{ S.version = null; }
+  renderVersion();
+  renderUpdateBanner();
+  return S.version;
+}
+
+function renderVersion(){
+  const el = document.getElementById('sb-version-text');
+  if(!el) return;
+  const v = S.version;
+  if(!v){ el.textContent = 'version unknown'; return; }
+  if(!v.git){ el.textContent = 'manual install'; return; }
+  el.textContent = v.current_short ? `v ${v.current_short}` : 'version unknown';
+}
+
+function renderUpdateBanner(){
+  const bar = document.getElementById('update-banner');
+  if(!bar) return;
+  const v = S.version;
+  const dismissed = v && v.latest ? localStorage.getItem('update_dismissed') === v.latest : false;
+  if(!v || !v.update_available || dismissed){ bar.style.display = 'none'; return; }
+  document.getElementById('update-banner-sub').textContent =
+    (v.latest_message ? `“${v.latest_message}”` : '') +
+    (v.current_short && v.latest_short ? `  ·  ${v.current_short} → ${v.latest_short}` : '');
+  const link = document.getElementById('update-banner-link');
+  if(link) link.href = v.latest_url || 'https://github.com/Aryan61056/email-scheduler';
+  bar.style.display = 'flex';
+}
+
+function dismissUpdateBanner(){
+  if(S.version && S.version.latest) localStorage.setItem('update_dismissed', S.version.latest);
+  document.getElementById('update-banner').style.display = 'none';
+}
+
+async function forceCheckUpdate(ev){
+  if(ev) ev.preventDefault();
+  const el = document.getElementById('sb-version-text');
+  if(el) el.textContent = 'checking…';
+  const v = await checkVersion(true);
+  if(!v || v.error){ toast(v && v.error ? v.error : 'Update check failed', 'error'); return; }
+  if(v.update_available){
+    localStorage.removeItem('update_dismissed');  // re-show banner on explicit check
+    renderUpdateBanner();
+    toast('A new version is available.', 'success');
+  } else {
+    toast("You're on the latest version.", 'info');
+  }
+}
+
+async function doUpdate(){
+  const btn = document.getElementById('update-banner-btn');
+  const orig = btn ? btn.innerHTML : '';
+  if(btn){ btn.disabled = true; btn.style.opacity = '.6'; btn.innerHTML = 'Updating…'; }
+  try{
+    const res = await fetch('/api/update', {method:'POST', headers:{'Content-Type':'application/json'}});
+    const d = await res.json();
+    if(!d.success){
+      toast(d.error || 'Update failed', 'error');
+      if(btn){ btn.disabled = false; btn.style.opacity = ''; btn.innerHTML = orig; }
+      return;
+    }
+    if(!d.updated){
+      toast("Already up to date.", 'info');
+      localStorage.removeItem('update_dismissed');
+      checkVersion(true);
+      if(btn){ btn.disabled = false; btn.style.opacity = ''; btn.innerHTML = orig; }
+      return;
+    }
+    localStorage.removeItem('update_dismissed');
+    toast('Updating and restarting — the page will reload automatically.', 'success');
+    if(btn) btn.innerHTML = 'Restarting…';
+    waitForRestart(d.current);
+  }catch{
+    toast('Update failed — check the app window for errors.', 'error');
+    if(btn){ btn.disabled = false; btn.style.opacity = ''; btn.innerHTML = orig; }
+  }
+}
+
+// Poll until the restarted server reports the expected new commit, then reload.
+async function waitForRestart(expectedSha){
+  for(let i=0;i<60;i++){
+    await new Promise(r=>setTimeout(r,1000));
+    try{
+      const r = await fetch('/api/version', {cache:'no-store'});
+      if(r.ok){
+        const v = await r.json();
+        if(!expectedSha || v.current === expectedSha){ location.reload(); return; }
+      }
+    }catch{}
+  }
+  toast('Restart is taking longer than expected — refresh the page manually.', 'info');
 }
 
 // ── Batches sidebar ───────────────────────────────────────────────────────────
@@ -1262,10 +1520,20 @@ function selectBatch(bid){
 function updateFromLabel(b){
   const lbl = document.getElementById('topbar-from-label');
   const em = document.getElementById('topbar-from-email');
+  const acct = document.getElementById('acct-dd');
   if(!lbl||!em) return;
-  const email = b?.account_email;
-  if(email){ lbl.style.display=''; em.textContent=email; }
-  else { lbl.style.display='none'; em.textContent=''; }
+  if(b){
+    // Inside a batch: the batch's own send account governs, so hide the global
+    // account selector and show a "sending from … [Edit]" pill instead.
+    lbl.style.display='inline-flex';
+    em.textContent = b.account_email || 'global default account';
+    if(acct) acct.style.display='none';
+  } else {
+    // All Emails view: no per-batch account, so show the global selector.
+    lbl.style.display='none';
+    em.textContent='';
+    if(acct) acct.style.display='';
+  }
 }
 
 // ── Warnings ──────────────────────────────────────────────────────────────────
@@ -1278,55 +1546,317 @@ async function fetchWarnings() {
   } catch {}
 }
 
+function setWarnFilter(k){ S.warnFilter = k; renderWarningsPanel(); }
+
+// Classify a failure by its error text so we can label and sort failures.
+const FAIL_TYPES = ['bounced','auth','network','mailapp','timeout','other'];
+function failType(err){
+  const e = (err || '').toLowerCase();
+  if (e.includes('timed out') || e.includes('timeout')) return { key:'timeout', label:'Timed out' };
+  if (e.includes('bounce') || e.includes('delivery failed') || e.includes('undeliverable') || e.includes('does not exist') || e.includes('no such') || e.includes('recipient') || e.includes('mailbox') || e.includes('not found')) return { key:'bounced', label:'Bounced' };
+  if (e.includes('auth') || e.includes('535') || e.includes('password') || e.includes('login') || e.includes('credential')) return { key:'auth', label:'Auth error' };
+  if (e.includes('smtp') || e.includes('connection') || e.includes('network') || e.includes('refused') || e.includes('connect')) return { key:'network', label:'Network / SMTP' };
+  if (e.includes('mail got an error') || e.includes('applescript') || e.includes('osascript') || e.includes('outlook') || e.includes('execution error') || e.includes('-1728') || e.includes('-1700')) return { key:'mailapp', label:'Mail app error' };
+  return { key:'other', label:'Other error' };
+}
+function isResolvedDup(d){ return d.duplicate_warning === 2; }
+
 function renderWarningsPanel() {
   const panel = document.getElementById('warn-panel');
   const dups = S.warnings.duplicates || [];
   const fails = S.warnings.failures || [];
   const content = S.warnings.content_issues || [];
+  // Split duplicates into the two real reasons an address gets flagged.
+  const pastSent = dups.filter(d => d.send_count != null);   // already emailed before (sent_address_log)
+  const queueDup = dups.filter(d => d.send_count == null);   // same address queued more than once
   const total = dups.length + fails.length + content.length;
   if (!total || S.warnDismissed) { panel.style.display = 'none'; return; }
   panel.style.display = '';
   document.getElementById('warn-count').textContent = total;
   const body = document.getElementById('warn-body');
   if (!S.warnPanelOpen) { body.style.display = 'none'; return; }
-  let html = '';
-  if (content.length) {
-    html += `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
-      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#b45309">Unfilled Template Fields (${content.length})</span>
-      <button class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:3px 10px;font-size:11.5px;font-weight:600" onclick="dismissWarnPanel();setFilter('warnings')">
-        View all →
-      </button>
-    </div>`;
+
+  // Category sub-tabs — only show a category if it has items ('All' always shows).
+  const cats = [
+    { key:'all',     label:'All warnings',        count: total },
+    { key:'past',    label:'Sent to in the past', count: pastSent.length },
+    { key:'dupq',    label:'Duplicate in queue',  count: queueDup.length },
+    { key:'failed',  label:'Failed / bounced',    count: fails.length },
+    { key:'content', label:'Unfilled fields',     count: content.length },
+  ].filter(c => c.key === 'all' || c.count > 0);
+  if (!cats.some(c => c.key === S.warnFilter)) S.warnFilter = 'all';
+
+  let html = '<div class="warn-tabs">' + cats.map(c =>
+    `<button class="warn-tab ${c.key === 'failed' ? 'wt-error ' : ''}${S.warnFilter === c.key ? 'active' : ''}" onclick="setWarnFilter('${c.key}')">${c.label}<span class="warn-tab-bdg">${c.count}</span></button>`
+  ).join('') + '</div>';
+
+  const show = k => S.warnFilter === 'all' || S.warnFilter === k;
+  let placed = false;
+  const gap = () => { if (placed) html += '<div style="height:8px"></div>'; placed = true; };
+  const head = (label, color, btn) =>
+    `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:${color}">${label}</span>${btn || ''}</div>`;
+  const editIcon = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+  // Resolve-duplicates button — greyed out when there's nothing left to resolve.
+  const dupBtn = (enabled) =>
+    `<button class="btn btn-sm ${enabled ? '' : 'warn-btn-disabled'}" ${enabled ? '' : 'disabled'} title="${enabled ? 'Review and resolve duplicates' : 'Nothing to resolve — all duplicates here are already resolved'}" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:3px 10px;font-size:11.5px;font-weight:600" ${enabled ? 'onclick="openDupReview(S.activeBatch)"' : ''}>${editIcon} Resolve Duplicates →</button>`;
+  // Skip button for already-emailed addresses — greyed out when nothing is skippable.
+  const skipIcon = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>`;
+  const skipBtn = (enabled) =>
+    `<button class="btn btn-sm ${enabled ? '' : 'warn-btn-disabled'}" ${enabled ? '' : 'disabled'} title="${enabled ? 'Skip these emails and mark them resolved' : 'Nothing to skip — already resolved or sent'}" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:3px 10px;font-size:11.5px;font-weight:600" ${enabled ? 'onclick="skipPastSent()"' : ''}>${skipIcon} Skip These &amp; Resolve →</button>`;
+
+  const resolvedTag = '<span class="warn-resolved">✓ Resolved</span>';
+  const pastSkippable = pastSent.filter(d => !isResolvedDup(d) && !['sent','sending'].includes(d.status));
+  const queueActive   = queueDup.filter(d => !isResolvedDup(d));
+  if (pastSent.length && show('past')) {
+    gap();
+    const nRes = pastSent.filter(isResolvedDup).length;
+    html += head(`Sent To In The Past (${pastSent.length}${nRes ? `, ${nRes} resolved` : ''})`, '#b45309', skipBtn(pastSkippable.length > 0));
+    pastSent.forEach(d => {
+      const r = isResolvedDup(d);
+      html += `<div class="warn-item ${r ? 'is-resolved' : ''}"><span>⚠</span><div><span style="font-weight:600">${esc(d.to_addr)}</span> — sent ${d.send_count} time(s) before (first: ${fmt(d.first_sent_at)}) ${r ? resolvedTag : ''}</div></div>`;
+    });
+  }
+  if (queueDup.length && show('dupq')) {
+    gap();
+    const nRes = queueDup.filter(isResolvedDup).length;
+    html += head(`Duplicate In Queue (${queueDup.length}${nRes ? `, ${nRes} resolved` : ''})`, '#b45309', dupBtn(queueActive.length > 0));
+    queueDup.forEach(d => {
+      const r = isResolvedDup(d);
+      html += `<div class="warn-item ${r ? 'is-resolved' : ''}"><span>⚠</span><div><span style="font-weight:600">${esc(d.to_addr)}</span> — appears in another unsent email ${r ? resolvedTag : ''}</div></div>`;
+    });
+  }
+  if (fails.length && show('failed')) {
+    gap();
+    // Sort failures by type (bounced → auth → network → mailapp → timeout → other), then most recent first.
+    const sortedFails = fails.slice().map(f => ({ ...f, _t: failType(f.error) }))
+      .sort((a, b) => (FAIL_TYPES.indexOf(a._t.key) - FAIL_TYPES.indexOf(b._t.key))
+                   || String(b.sent_at || '').localeCompare(String(a.sent_at || '')));
+    // Breakdown-by-type summary, e.g. "12 bounced · 3 timed out".
+    const byType = {};
+    sortedFails.forEach(f => { byType[f._t.label] = (byType[f._t.label] || 0) + 1; });
+    const summary = Object.entries(byType).map(([l, c]) => `${c} ${l.toLowerCase()}`).join(' · ');
+    html += `<div class="warn-fail-head">
+        <span class="warn-fail-title">Failed to send (${sortedFails.length})</span>
+        <span class="warn-fail-summary">${summary}</span>
+      </div>`;
+    sortedFails.forEach(f => {
+      html += `<div class="warn-item warn-fail-item"><span class="warn-type ${f._t.key}">${f._t.label}</span><div style="flex:1;min-width:0"><span style="font-weight:600">${esc(f.to_addr)}</span> <span style="color:#6b7280">${esc(f.error || 'No error message recorded')}</span></div></div>`;
+    });
+  }
+  if (content.length && show('content')) {
+    gap();
+    const viewBtn = `<button class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:3px 10px;font-size:11.5px;font-weight:600" onclick="dismissWarnPanel();setFilter('warnings')">View all →</button>`;
+    html += head(`Unfilled Template Fields (${content.length})`, '#b45309', viewBtn);
     content.slice(0, 5).forEach(c => {
       html += `<div class="warn-item"><span style="color:#d97706">⚠</span><div><span style="font-weight:600">${esc(c.to_addr)}</span> — body contains "not found in any format"</div></div>`;
     });
     if (content.length > 5) html += `<div style="font-size:11.5px;color:#92400e;padding:4px 0">…and ${content.length - 5} more</div>`;
   }
-  if (dups.length) {
-    if (content.length) html += '<div style="height:8px"></div>';
-    html += `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
-      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#b45309">Duplicate Addresses (${dups.length})</span>
-      <button class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:3px 10px;font-size:11.5px;font-weight:600" onclick="openDupReview(S.activeBatch)">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        Resolve Duplicates →
-      </button>
-    </div>`;
-    dups.forEach(d => {
-      const msg = d.send_count != null
-        ? `sent ${d.send_count} time(s) before (first: ${fmt(d.first_sent_at)})`
-        : `also exists as another unsent email`;
-      html += `<div class="warn-item"><span>⚠</span><div><span style="font-weight:600">${esc(d.to_addr)}</span> — ${msg}</div></div>`;
-    });
-  }
-  if (fails.length) {
-    if (dups.length || content.length) html += '<div style="height:8px"></div>';
-    html += `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#b91c1c;margin-bottom:4px">Recent Failures (${fails.length})</div>`;
-    fails.forEach(f => {
-      html += `<div class="warn-item"><span style="color:#dc2626">✗</span><div><span style="font-weight:600">${esc(f.to_addr)}</span> — ${esc(f.error || 'Unknown error')}</div></div>`;
-    });
-  }
+
   body.innerHTML = html;
   body.style.display = '';
+}
+
+// Skip every "already emailed before" address that can still be skipped, and
+// mark each one resolved so it leaves the warnings list.
+async function skipPastSent() {
+  const targets = (S.warnings.duplicates || [])
+    .filter(d => d.send_count != null && d.duplicate_warning !== 2 && !['sent','sending'].includes(d.status));
+  const ids = targets.map(d => d.id);
+  if (!ids.length) { toast('Nothing to skip', 'info'); return; }
+  if (!confirm(`Skip ${ids.length} email(s) addressed to people you've already emailed?\n\nThey'll be marked Skipped and Resolved, and won't be sent.`)) return;
+  try {
+    const res = await fetch('/api/bulk-skip', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ids, resolve: true }) });
+    const d = await res.json();
+    toast(`Skipped ${d.count ?? ids.length} email(s) — marked resolved`, 'success');
+  } catch { toast('Could not skip emails', 'error'); return; }
+  fetchWarnings(); fetchTable(); fetchStats();
+}
+
+// ── Stats & Replies ───────────────────────────────────────────────────────────
+function scopeLabel(){
+  if(!S.activeBatch) return 'All emails (every batch)';
+  const b = S.batches.find(x=>String(x.id)===String(S.activeBatch));
+  return b ? `Batch — ${b.name}` : 'This batch';
+}
+
+async function openStats(){
+  openModal('m-stats');
+  document.getElementById('stats-scope').innerHTML = `Showing <strong>${esc(scopeLabel())}</strong>. Select a batch in the sidebar (or “All Emails”) to change scope.`;
+  document.getElementById('stats-content').innerHTML = '<div style="padding:20px;color:var(--muted);font-size:13px">Loading…</div>';
+  try{
+    const q = S.activeBatch ? `?batch_id=${S.activeBatch}` : '';
+    const d = await (await fetch('/api/insights'+q)).json();
+    renderStats(d);
+  }catch{ document.getElementById('stats-content').innerHTML = '<div style="padding:20px;color:var(--muted)">Could not load stats.</div>'; }
+}
+
+function fmtDur(sec){
+  if(sec == null) return '—';
+  sec = Math.max(0, Math.round(sec));
+  const d = Math.floor(sec/86400), h = Math.floor((sec%86400)/3600), m = Math.floor((sec%3600)/60);
+  if(d > 0) return `${d}d ${h}h`;
+  if(h > 0) return `${h}h ${m}m`;
+  if(m > 0) return `${m}m`;
+  return '<1m';
+}
+
+function renderStats(d){
+  const st=d.status, fa=d.failures, re=d.responses;
+  const rm = d.reply_metrics || {}, tl = d.timeline || [];
+  const yetToSend = st.needs_review+st.verified+st.pending+st.scheduled+st.overdue+st.sending;
+  const replies = re.replied;
+  const pct = (n,dn)=> dn ? Math.round(n/dn*100) : 0;
+  const cell=(v,l,cls='',sub='')=>`<div class="stat-cell ${cls} ${v===0?'zero':''}"><div class="sv">${v}</div><div class="sl">${l}</div>${sub?`<div class="sp">${sub}</div>`:''}</div>`;
+  let h='';
+
+  // Headline metrics
+  h+='<div class="stat-headline">';
+  h+=`<div class="bigcard teal"><div class="bv">${Math.round((rm.reply_rate||0)*100)}%</div><div class="bl">Reply rate</div><div class="bs">${rm.replies||0} of ${rm.sent||0} sent</div></div>`;
+  h+=`<div class="bigcard green"><div class="bv">${Math.round((rm.delivery_rate||0)*100)}%</div><div class="bl">Delivery rate</div><div class="bs">${(rm.sent||0)-(fa.bounced||0)} delivered, ${fa.bounced||0} bounced</div></div>`;
+  h+=`<div class="bigcard violet"><div class="bv">${rm.avg_seconds!=null?fmtDur(rm.avg_seconds):'—'}</div><div class="bl">Avg time to reply</div><div class="bs">${rm.with_timing?`fastest ${fmtDur(rm.fastest_seconds)} · slowest ${fmtDur(rm.slowest_seconds)}`:'no timing data yet'}</div></div>`;
+  h+='</div>';
+
+  // Pipeline proportion bar
+  const pipe = [
+    {label:'Sent', value:st.sent, color:'#16a34a'},
+    {label:'Yet to send', value:yetToSend, color:'#0d9488'},
+    {label:'Failed', value:st.failed, color:'#dc2626'},
+    {label:'Skipped', value:st.skipped, color:'#94a3b8'},
+  ];
+  h+='<div class="stat-group-lbl">Where emails stand</div>';
+  h+='<div class="pbar">'+pipe.filter(p=>p.value>0).map(p=>`<div class="pbar-seg" style="width:${pct(p.value,d.total)}%;background:${p.color}"></div>`).join('')+'</div>';
+  h+='<div class="pbar-legend">'+pipe.map(p=>`<span class="pbar-leg"><i style="background:${p.color}"></i>${p.label} <strong>${p.value}</strong> (${pct(p.value,d.total)}%)</span>`).join('')+'</div>';
+
+  // Reply funnel
+  const fun = [
+    {label:'Total', value:d.total, color:'#64748b'},
+    {label:'Sent', value:st.sent, color:'#0d9488'},
+    {label:'Replied', value:replies, color:'#16a34a'},
+  ];
+  h+='<div class="stat-group-lbl">Outreach funnel</div><div class="funnel">';
+  h+=fun.map(f=>`<div class="funnel-row"><span class="funnel-lbl">${f.label}</span><div class="funnel-track"><div class="funnel-fill" style="width:${pct(f.value,d.total||1)}%;background:${f.color}"></div></div><span class="funnel-val">${f.value}</span></div>`).join('');
+  h+='</div>';
+
+  // Replies over time
+  if(tl.length){
+    const max = Math.max(...tl.map(t=>t.count), 1);
+    h+='<div class="stat-group-lbl">Replies over time</div><div class="tl-chart">';
+    h+=tl.map(t=>`<div class="tl-col" title="${t.day}: ${t.count} repl${t.count===1?'y':'ies'}"><div class="tl-bar" style="height:${Math.round(t.count/max*100)}%"></div><div class="tl-x">${t.day.slice(5)}</div></div>`).join('');
+    h+='</div>';
+  }
+
+  // Detailed numbers
+  h+='<div class="stat-group-lbl">Yet to send</div><div class="stat-grid">';
+  h+=cell(st.needs_review,'Needs review');
+  h+=cell(st.verified,'Verified');
+  h+=cell(st.pending,'Pending');
+  h+=cell(st.scheduled,'Scheduled');
+  h+=cell(st.overdue,'Overdue','warn');
+  h+=cell(st.sending,'Sending');
+  h+='</div>';
+  h+='<div class="stat-group-lbl">Delivery problems</div><div class="stat-grid">';
+  h+=cell(st.failed,'Failed (total)','bad', st.sent?`${pct(st.failed,st.sent)}% of sent`:'');
+  h+=cell(fa.bounced,'Bounced','bad');
+  h+=cell(fa.timed_out,'Timed out','bad');
+  h+=cell(fa.auth,'Auth error','bad');
+  h+=cell(fa.network,'Network / SMTP','bad');
+  h+=cell(fa.mailapp,'Mail app error','bad');
+  h+=cell(fa.other,'Other error','bad');
+  h+=cell(st.skipped,'Skipped');
+  h+='</div>';
+  h+='<div class="stat-group-lbl">Replies & responses</div><div class="stat-grid">';
+  h+=cell(st.sent,'Successfully sent','good');
+  h+=cell(re.replied,'Replied','good', st.sent?`${pct(re.replied,st.sent)}% of sent`:'');
+  h+='</div>';
+  document.getElementById('stats-content').innerHTML=h;
+}
+
+async function checkReplies(){
+  const btn = document.getElementById('replies-check-btn');
+  const orig = btn ? btn.innerHTML : '';
+  if(btn){ btn.disabled = true; btn.style.opacity = '.6'; btn.innerHTML = 'Scanning inbox…'; }
+  try{
+    const body = S.activeBatch ? { batch_id: parseInt(S.activeBatch) } : {};
+    const res = await fetch('/api/check-replies', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await res.json();
+    if(d.success){
+      toast(d.marked > 0 ? `Found ${d.marked} new repl${d.marked === 1 ? 'y' : 'ies'}` : 'No new replies found', d.marked > 0 ? 'success' : 'info');
+      await openReplies(); fetchStats();
+    } else {
+      toast(d.error || 'Reply check failed — is Apple Mail open?', 'error');
+    }
+  }catch{ toast('Reply check failed — is Apple Mail open?', 'error'); }
+  finally{ if(btn){ btn.disabled = false; btn.style.opacity = ''; btn.innerHTML = orig; } }
+}
+
+// Turn a seconds delta into "2d 4h later" / "3h later" / "45m later".
+function humanDelta(sec){
+  if(sec == null) return '';
+  sec = Math.max(0, Math.round(sec));
+  const d = Math.floor(sec/86400), h = Math.floor((sec%86400)/3600), m = Math.floor((sec%3600)/60);
+  if(d > 0) return `${d}d ${h}h later`;
+  if(h > 0) return `${h}h ${m}m later`;
+  if(m > 0) return `${m}m later`;
+  return 'within a minute';
+}
+
+async function loadReplyFreq(){
+  try{
+    const s = await (await fetch('/api/reply-check-settings')).json();
+    const sel = document.getElementById('reply-freq');
+    if(sel) sel.value = !s.enabled ? 'off' : String(s.interval_minutes);
+  }catch{}
+}
+async function saveReplyFreq(){
+  const v = document.getElementById('reply-freq').value;
+  const body = v === 'off' ? { enabled:false, interval_minutes:60 } : { enabled:true, interval_minutes:parseInt(v) };
+  try{
+    await fetch('/api/reply-check-settings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    toast(v === 'off' ? 'Background reply checks off' : `Auto-checking ${v === '1440' ? 'daily' : 'every ' + v + ' min'}`, 'success');
+  }catch{ toast('Could not save setting', 'error'); }
+}
+
+async function openReplies(){
+  openModal('m-replies');
+  document.getElementById('replies-scope').innerHTML = `Showing <strong>${esc(scopeLabel())}</strong>.`;
+  document.getElementById('replies-content').innerHTML = '<div style="padding:20px;color:var(--muted);font-size:13px">Loading…</div>';
+  loadReplyFreq();
+  try{
+    const q = S.activeBatch ? `?batch_id=${S.activeBatch}` : '';
+    const d = await (await fetch('/api/replies'+q)).json();
+    renderReplies(d.replies||[]);
+  }catch{ document.getElementById('replies-content').innerHTML = '<div style="padding:20px;color:var(--muted)">Could not load replies.</div>'; }
+}
+
+function renderReplies(rows){
+  const el = document.getElementById('replies-content');
+  if(!rows.length){
+    el.innerHTML = '<div style="padding:30px 12px;text-align:center;color:var(--muted)"><div style="font-size:30px;margin-bottom:8px">📭</div><div style="font-size:13.5px">No replies recorded yet.</div><div style="font-size:12px;margin-top:4px">Hit <strong>Check now</strong> to scan your inbox, or open an email and set its response manually.</div></div>';
+    return;
+  }
+  el.innerHTML = rows.map(r=>{
+    const delta = r.reply_delta_seconds != null ? humanDelta(r.reply_delta_seconds) : '';
+    const snip = (r.reply_body || '').trim();
+    return `<div class="reply-row" style="align-items:flex-start">
+      <span class="rs-badge rs-${r.response_status}" style="flex-shrink:0;margin-top:2px">${RS_LABELS[r.response_status]||r.response_status}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.to_addr)}</div>
+        <div style="font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.subject||'—')}</div>
+        ${snip ? `<div class="reply-snippet">${esc(snip)}</div>` : ''}
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">
+          ${r.batch_name ? `<span>${esc(r.batch_name)}</span>` : ''}
+          ${r.sent_at ? `<span>· sent ${fmt(r.sent_at)}</span>` : ''}
+          ${r.reply_received_at ? `<span>· replied ${fmt(r.reply_received_at)}</span>` : ''}
+          ${delta ? `<span style="color:var(--primary);font-weight:600">· ${delta}</span>` : ''}
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm btn-icon" title="Open email" style="flex-shrink:0" onclick="closeModal('m-replies');viewDetail(${r.id})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>`;
+  }).join('');
 }
 
 function toggleWarnPanel() {
@@ -1385,6 +1915,8 @@ async function fetchStats(){
     const el = document.getElementById('tb-'+k);
     if(el) el.textContent = k==='all' ? (d.total||0) : (d[k]||0);
   });
+  const repEl = document.getElementById('sb-replies-count');
+  if(repEl) repEl.textContent = (d.replied||0);
   renderAttentionBar(d);
 }
 
@@ -1463,7 +1995,7 @@ const SICONS = {
   verified: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>',
 };
 
-const RS_LABELS = {none:'—',replied:'Replied',interested:'Interested',not_interested:'Not interested',bounced:'Bounced'};
+const RS_LABELS = {none:'—',replied:'Replied',automated:'Automated',bounced:'Bounced'};
 
 const SLABELS = { needs_review:'Needs Review', verified:'Verified', pending:'Pending', scheduled:'Scheduled', overdue:'Overdue', sending:'Sending', sent:'Sent', failed:'Failed', skipped:'Skipped', invalid:'Invalid' };
 function badge(status){ return `<span class="badge badge-${status}">${SICONS[status]||''} ${SLABELS[status]||status.charAt(0).toUpperCase()+status.slice(1)}</span>`; }
@@ -1493,7 +2025,7 @@ function renderTable(){
              : countdown(e.send_time);
     const cdAttrs = isSent ? `data-sent="${e.sent_at||''}"` : `data-time="${e.send_time||''}"`;
     return `<tr data-id="${e.id}" class="${sel?'is-sel':''}" onclick="rowClick(event,${e.id})">
-      <td class="td-chk"><input type="checkbox" ${sel?'checked':''} onchange="toggleSel(${e.id},this.checked)" onclick="event.stopPropagation()"></td>
+      <td class="td-chk"><input type="checkbox" ${sel?'checked':''} onclick="event.stopPropagation();checkClick(event,${e.id})"></td>
       <td><span class="cell-clamp" title="${esc(e.to)}">${esc(e.to)}</span></td>
       <td class="td-subj"><span class="cell-clamp" title="${esc(e.subject)}">${esc(e.subject)}</span></td>
       <td style="font-size:12.5px;white-space:nowrap">${esc(e.send_time_str||'—')}</td>
@@ -1548,8 +2080,27 @@ document.getElementById('filter-tabs').addEventListener('click',e=>{
 });
 
 // ── Selection ─────────────────────────────────────────────────────────────────
+let lastSelId = null;   // anchor for shift-click range selection
+function checkClick(ev, id){
+  const checked = ev.target.checked;   // checkbox state after this click
+  if(ev.shiftKey && lastSelId !== null && lastSelId !== id){
+    // Select (or deselect) the whole range between the anchor and this row,
+    // matching the order currently shown in the table — like a file explorer.
+    const ids = S.tableEmails.map(e=>e.id);
+    const a = ids.indexOf(lastSelId), b = ids.indexOf(id);
+    if(a !== -1 && b !== -1){
+      const lo = Math.min(a,b), hi = Math.max(a,b);
+      for(let i=lo;i<=hi;i++){ checked ? S.selected.add(ids[i]) : S.selected.delete(ids[i]); }
+    }
+  } else {
+    checked ? S.selected.add(id) : S.selected.delete(id);
+  }
+  lastSelId = id;
+  renderTable(); updateSelBar();
+}
 function toggleSel(id,checked){
   checked?S.selected.add(id):S.selected.delete(id);
+  lastSelId = id;
   document.querySelector(`tr[data-id="${id}"]`)?.classList.toggle('is-sel',checked);
   updateSelBar();
 }
@@ -1634,7 +2185,7 @@ async function viewDetail(id){
 function renderDetailInfo(e){
   const row=(l,v,empty='—')=>`<div class="dfield"><div class="dlbl">${l}</div><div class="dval">${v&&v!=='nan'?esc(v):`<span style="color:var(--muted)">${empty}</span>`}</div></div>`;
 
-  const RS_OPTIONS = ['none','replied','interested','not_interested','bounced'];
+  const RS_OPTIONS = ['none','replied','automated','bounced'];
   const rsSelect = `<select class="fg" style="display:inline;width:auto;font-size:12px;padding:3px 6px" onchange="setResponse(${e.id},this.value)">
     ${RS_OPTIONS.map(r=>`<option value="${r}" ${e.response_status===r?'selected':''}>${RS_LABELS[r]||r}</option>`).join('')}
   </select>`;
@@ -1671,11 +2222,7 @@ function renderDetailInfo(e){
       <div class="dval" style="display:flex;align-items:center;gap:8px">${rsBadge(e.response_status)} ${rsSelect}</div>
     </div>
     ${e.sent_at?`<div class="dfield"><div class="dlbl">Sent At</div><div class="dval">${fmt(e.sent_at)}</div></div>`:''}
-    ${e.professor_link ? `
-    <div class="dfield">
-      <div class="dlbl">Professor Link</div>
-      <div class="dval"><a href="${esc(e.professor_link)}" target="_blank" style="color:var(--primary);word-break:break-all">${esc(e.professor_link)}</a></div>
-    </div>` : ''}
+    ${e.reply_received_at?`<div class="dfield"><div class="dlbl">Reply Received</div><div class="dval">${fmt(e.reply_received_at)}${e.reply_delta_seconds!=null?` <span style="color:var(--muted);font-size:11.5px">(${humanDelta(e.reply_delta_seconds)})</span>`:''}</div></div>`:''}
   `;
 }
 
@@ -1754,7 +2301,6 @@ async function openComposeModal(editId=null){
     document.getElementById('cf-time').value = e.send_time ? e.send_time.slice(0,16) : '';
     document.getElementById('cf-attach').value = e.attachments || '';
     document.getElementById('cf-notes').value = e.notes || '';
-    document.getElementById('cf-prof-link').value = e?.professor_link || '';
     document.getElementById('cf-batch').value = e.batch_id || '';
   } else {
     document.getElementById('cf-to').value = '';
@@ -1765,7 +2311,6 @@ async function openComposeModal(editId=null){
     document.getElementById('cf-time').value = '';
     document.getElementById('cf-attach').value = '';
     document.getElementById('cf-notes').value = '';
-    document.getElementById('cf-prof-link').value = '';
     if(S.activeBatch) document.getElementById('cf-batch').value = S.activeBatch;
   }
 
@@ -1785,7 +2330,6 @@ async function saveCompose(){
     send_time: document.getElementById('cf-time').value,
     attachments: document.getElementById('cf-attach').value,
     notes: document.getElementById('cf-notes').value,
-    professor_link: document.getElementById('cf-prof-link').value.trim() || null,
     batch_id: document.getElementById('cf-batch').value || null,
   };
 
